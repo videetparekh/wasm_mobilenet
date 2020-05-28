@@ -1,0 +1,33 @@
+{
+  "name": "wasm_mobilenet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./index.js",
+    "dev": "nodemon ./index.js",
+    "ui": "browser-sync start --proxy=localhost:8000 --files='**/*.css, **/*.pug, **/*.js' --ignore=node_modules --reload-delay 10 --no-ui --no-notify"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "assert": "^2.0.0",
+    "canvas": "^2.6.1",
+    "csv-stringify": "^5.5.0",
+    "deasync": "^0.1.20",
+    "express": "^4.17.1",
+    "fast-csv": "^4.1.3",
+    "fetch": "^1.1.0",
+    "fs": "0.0.1-security",
+    "numjs": "github:michaelmendoza/numjs",
+    "path": "^0.12.7",
+    "performance-now": "^2.1.0",
+    "pug": "^2.0.4",
+    "sharp": "^0.25.3"
+  },
+  "devDependencies": {
+    "browsersync": "0.0.1-security",
+    "nodemon": "^2.0.3"
+  }
+}

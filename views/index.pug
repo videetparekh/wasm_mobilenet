@@ -1,0 +1,72 @@
+extends layout
+
+block layout-content
+  div.View.WelcomeView
+    h1.Banner Mobilenet
+    div.Message
+      div.Title
+        h3 Classify an Image
+      .form-group
+        label(for='photo') Photo 
+        input#file(type='file',name='photo', accept='image/*')
+      .form-group
+        label Model Type:
+        input(type='radio', name='model_type', id='baseline', value='baseline', checked=true)
+        label(for='baseline') Baseline
+        input(type='radio', name='model_type', id='reimann', value='reimann')
+        label(for='reimann') Reimann
+        input(type='radio', name='model_type', id='lorenz', value='lorenz')
+        label(for='lorenz') Lorenz
+      span.Details Upload an image to classify using MobileNetv2
+      div.text
+        p#label()
+        p#loadtime()
+        p#inferencetime()
+    div.NavButtons
+      button.NavButton(onclick="predict()") Predict
+
+  script.
+    async function predict() {
+      const imageURL = document.getElementById("file").files[0];
+      const modelButtons = document.getElementsByName('model_type');
+      var modelType = 'baseline';
+      for (var i = 0; i < modelButtons.length; i++) {
+        if (modelButtons[i].checked) {
+          modelType = modelButtons[i].value;
+        }
+      }
+      const image = await loadImage(imageURL);
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/predict/", true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onload = function () {
+        if (xhr.readyState === xhr.DONE) {
+          if (xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText)
+            document.getElementById("label").innerHTML = "Label: "+ response.label;
+            document.getElementById("loadtime").innerHTML = "Load Time: "+ response.loadtime+"ms";
+            document.getElementById("inferencetime").innerHTML = "Inference Time: "+ response.inftime+"ms";
+          }
+        }
+      };
+
+      //- for (int i=0;i<100;i++) {
+        
+      //- }
+      xhr.send(JSON.stringify({"image": image.src, "modelType": modelType}));
+    }
+
+    async function loadImage(imgFile) {
+      return new Promise((resolve, reject) => {
+        var reader = new FileReader();
+        reader.onload = async e => {
+          const image = new Image();
+          image.src = e.target.result;
+          //- image.setAttribute("crossOrigin", "anonymous");
+          image.onload = () => resolve(image);
+          image.onerror = reject;
+        }
+        reader.onerror = reject;
+        reader.readAsDataURL(imgFile);
+      });
+    }
