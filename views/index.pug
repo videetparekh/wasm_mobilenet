@@ -15,8 +15,10 @@ block layout-content
         label(for='baseline') Baseline
         input(type='radio', name='model_type', id='reimann', value='reimann')
         label(for='reimann') Reimann
-        input(type='radio', name='model_type', id='lorenz', value='lorenz')
-        label(for='lorenz') Lorenz
+        input(type='radio', name='model_type', id='lorenz_int8', value='lorenz_int8')
+        label(for='lorenz_int8') Lorenz Int8
+        input(type='radio', name='model_type', id='lorenz_int16', value='lorenz_int16')
+        label(for='lorenz_int16') Lorenz Int16
       span.Details Upload an image to classify using MobileNetv2
       div.text
         p#label()

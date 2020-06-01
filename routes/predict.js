@@ -14,15 +14,18 @@ const router = express.Router();
 router.post("/", async(req, res) => {
     var imageURI = req.body.image
     var modelType = req.body.modelType
+    var ModelInfo = collectModel(modelType)
 
     var each = []
-    const iters = 1
+    const iters = 50 // 1
 
     for (let i = 0; i < iters; i++) {
-        var [classifier, loadtime] = await tvm_setup(modelType)
+        var [classifier, loadtime] = await tvm_setup(ModelInfo)
         inf_start = now()
         var imageData = drawCanvas(imageURI)
-        var processedImage = preprocess_imagenet(imageData)
+        var preprocstart = now()
+        var processedImage = ModelInfo["preprocessor"](imageData)
+        var preproctime = now() - preprocstart
             // var processedImage = preprocImage(imageData)
             // var [label, loadtime, inftime]= await classify(processedImage);
         var label = await classifier.classify(processedImage)
@@ -33,29 +36,27 @@ router.post("/", async(req, res) => {
         resp_obj["read_wasm"] = loadtime[0]
         resp_obj["load_weights"] = loadtime[1]
         resp_obj["pop_weights"] = loadtime[2]
+        resp_obj["preprocess"] = preproctime
             // console.log(JSON.stringify(resp_obj))
         each.push(resp_obj)
     }
     res.send(JSON.stringify(resp_obj));
 
-    console.log(each)
-        // writeToFile(each, ['label', 'loadtime', 'inftime', 'read_wasm', 'load_weights', 'pop_weights'])
+    writeToFile(each, ['label', 'loadtime', 'inftime', 'read_wasm', 'load_weights', 'pop_weights', "preprocess"], 'results/' + modelType + '.csv')
 });
 
-async function tvm_setup(modelType) {
-
-    var modelPaths = collectModel(modelType)
+async function tvm_setup(modelInfo) {
 
     var loadtime = [0.0, 0.0, 0.0]
 
     //Collect and load weights and graph file
     var start = now()
-    var temp = await JSON.parse(await fs.readFileSync(modelPaths["base"] + modelPaths["graph"], "utf-8"));
+    var temp = await JSON.parse(await fs.readFileSync(modelInfo["base"] + modelInfo["graph"], "utf-8"));
     delete temp['leip']
     const graphJson = JSON.stringify(temp)
     const synset = await JSON.parse(await fs.readFileSync("public/wasm/open_images_labels.json", ));
     const paramsBinary = new Uint8Array(
-        await fs.readFileSync(modelPaths["base"] + modelPaths["params"])
+        await fs.readFileSync(modelInfo["base"] + modelInfo["params"])
     );
     loadtime[1] = now() - start
 
@@ -65,8 +66,13 @@ async function tvm_setup(modelType) {
     const wasmPath = tvmjs.wasmPath();
     delete require.cache[require.resolve(path.join(wasmPath, "tvmjs_runtime.wasi.js"))]
     const EmccWASI = require(path.join(wasmPath, "tvmjs_runtime.wasi.js"));
-    const wasmSource = fs.readFileSync(modelPaths["base"] + modelPaths["wasm"])
-    const tvm = await tvmjs.instantiate(wasmSource, new EmccWASI())
+    // Try adding roundf to EMCC WASI here
+    var WasiObj = new EmccWASI()
+    WasiObj['Module']['wasmLibraryProvider']['imports']['env']['roundf'] = Math.round
+    const wasmSource = fs.readFileSync(modelInfo["base"] + modelInfo["wasm"])
+
+    //Lorenz Fails Here: LinkError: WebAssembly.instantiate(): Import #0 module="env" function="roundf" error: function import requires a callable
+    const tvm = await tvmjs.instantiate(wasmSource, WasiObj)
 
     ctx = tvm.cpu(0)
     const sysLib = tvm.systemLib()
@@ -77,8 +83,8 @@ async function tvm_setup(modelType) {
     // Populate weights into graph
     start = now()
     const test = executor.loadParams(paramsBinary)
-    const inputData = tvm.empty([1, 3, 224, 224], "float32", tvm.cpu());
-    const outputData = tvm.empty([1, 10], "float32", tvm.cpu());
+    const inputData = tvm.empty(modelInfo["input_shape"], modelInfo["input_type"], tvm.cpu());
+    const outputData = tvm.empty(modelInfo["output_shape"], modelInfo["input_type"], tvm.cpu());
     const outputGPU = executor.getOutput(0);
     // run the first time to make sure all weights are populated.
     executor.run();
@@ -113,7 +119,6 @@ function preprocess_imagenet(imageData) {
         // var fp32data = nj.float32(numpyArray)
     var divfp32data = numpyArray.divide(127.5)
     var normdata = divfp32data.subtract(1.0)
-    console.log(normdata.flatten().tolist())
     return new Float32Array(normdata.flatten().tolist());
 }
 
@@ -155,25 +160,30 @@ function collectModel(modelType) {
     // The base path is the path to the folder containing the params and graph files
     // The modelObj provides filenames relative to the basepath collected from ModelInfo
     const modelInfo = {
-        "baseline": "public/wasm/baseline/",
-        "reimann": "public/wasm/reimann/",
-        "lorenz": "public/wasm/lorenz"
+        "baseline": { "base": "public/wasm/baseline/", "type": "float32", "preprocess_func": preprocess_imagenet },
+        "reimann": { "base": "public/wasm/reimann/", "type": "float32", "preprocess_func": preprocess_imagenet },
+        "lorenz_int8": { "base": "public/wasm/lorenz_int8/", "type": "uint8", "preprocess_func": preprocess_uint8 },
+        "lorenz_int16": { "base": "public/wasm/lorenz_int16/", "type": "uint8", "preprocess_func": preprocess_uint8 }
     }
 
     var modelObj = {
         "graph": "modelDescription.json",
         "params": "modelParams.params",
-        "wasm": "modelLibrary.wasm"
+        "wasm": "modelLibrary.wasm",
+        "input_shape": [1, 3, 224, 224],
+        "output_shape": [1, 10],
     }
 
-    modelObj["base"] = modelInfo[modelType]
+    modelObj["base"] = modelInfo[modelType]["base"]
+    modelObj["input_type"] = modelInfo[modelType]["type"]
+    modelObj["preprocessor"] = modelInfo[modelType]["preprocess_func"]
     return modelObj
 }
 
 
-function writeToFile(data, column_headers) {
-    stringify(data, { header: true, columns: column_headers }, function(err, output) {
-        fs.writeFile('results.csv', output, 'utf8', function(err) {
+function writeToFile(data, columnHeaders, fileName) {
+    stringify(data, { header: true, columns: columnHeaders }, function(err, output) {
+        fs.writeFile(fileName, output, 'utf8', function(err) {
             if (err) {
                 console.log('Some error occured - file either not saved or corrupted file saved.');
             } else {
