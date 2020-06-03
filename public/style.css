@@ -103,6 +103,12 @@ a {
     line-height: 1.5em;
 }
 
+.Message>.form {
+    width: 50%;
+    float: left;
+    margin-right: 10px;
+}
+
 .NavButtons {
     display: flex;
     width: 100%;
@@ -137,9 +143,11 @@ a {
     background-size: cover;
 }
 
-.text {
+.Message>.text {
     font-size: 12px;
     padding: 10px;
+    margin-right: 10px;
+    float: left
 }
 
 .form-group {

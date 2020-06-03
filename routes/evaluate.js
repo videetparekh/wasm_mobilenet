@@ -12,7 +12,7 @@ var debugLib = require('../utils/debug.js')
 const router = express.Router();
 
 router.get("/", (req, res) => {
-    res.render("predict");
+    res.render("evaluate");
 });
 
 // Display the dashboard page
@@ -23,7 +23,7 @@ router.post("/", async(req, res) => {
     var modelInfo = modelLib.collectModel(modelType, variantType)
 
     var each = []
-    const iters = 1 // 1
+    const iters = 50 // 1
 
     for (let i = 0; i < iters; i++) {
         var [classifier, loadtime] = await tvm_setup(modelInfo)
@@ -46,7 +46,10 @@ router.post("/", async(req, res) => {
     }
     res.send(JSON.stringify(resp_obj));
 
-    // debugLib.writeToFile(each, ['label', 'loadtime', 'inftime', 'read_wasm', 'load_weights', 'pop_weights', "preprocess"], 'results/' + modelType + "/" + variantType + '.csv')
+    debugLib.writeToFile(
+        each, ['label', 'loadtime', 'inftime', 'read_wasm', 'load_weights', 'pop_weights', "preprocess"],
+        'results/' + modelType + "/" + variantType + '.csv'
+    )
 });
 
 async function tvm_setup(modelInfo) {
