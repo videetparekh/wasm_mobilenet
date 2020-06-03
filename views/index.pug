@@ -11,13 +11,19 @@ block layout-content
         input#file(type='file',name='photo', accept='image/*')
       .form-group
         label Model Type:
-        input(type='radio', name='model_type', id='baseline', value='baseline', checked=true)
+        input(type='radio', name='model_type', id='mobilenetv2', value='mobilenetv2', checked=true)
+        label(for='mobilenetv2') MobileNetv2
+        input(type='radio', name='model_type', id='tiny', value='tiny')
+        label(for='tiny') Tiny Model - Person Classifier
+      .form-group
+        label Variant Type:
+        input(type='radio', name='variant_type', id='baseline', value='baseline', checked=true)
         label(for='baseline') Baseline
-        input(type='radio', name='model_type', id='reimann', value='reimann')
+        input(type='radio', name='variant_type', id='reimann', value='reimann')
         label(for='reimann') Reimann
-        input(type='radio', name='model_type', id='lorenz_int8', value='lorenz_int8')
+        input(type='radio', name='variant_type', id='lorenz_int8', value='lorenz_int8')
         label(for='lorenz_int8') Lorenz Int8
-        input(type='radio', name='model_type', id='lorenz_int16', value='lorenz_int16')
+        input(type='radio', name='variant_type', id='lorenz_int16', value='lorenz_int16')
         label(for='lorenz_int16') Lorenz Int16
       span.Details Upload an image to classify using MobileNetv2
       div.text
@@ -30,13 +36,23 @@ block layout-content
   script.
     async function predict() {
       const imageURL = document.getElementById("file").files[0];
+      
       const modelButtons = document.getElementsByName('model_type');
-      var modelType = 'baseline';
+      var modelType = 'mobilenetv2';
       for (var i = 0; i < modelButtons.length; i++) {
         if (modelButtons[i].checked) {
           modelType = modelButtons[i].value;
         }
       }
+
+      const variantButtons = document.getElementsByName('variant_type');
+      var variantType = 'baseline';
+      for (var i = 0; i < variantButtons.length; i++) {
+        if (variantButtons[i].checked) {
+          variantType = variantButtons[i].value;
+        }
+      }
+
       const image = await loadImage(imageURL);
       var xhr = new XMLHttpRequest();
       xhr.open("POST", "/predict/", true);
@@ -55,7 +71,7 @@ block layout-content
       //- for (int i=0;i<100;i++) {
         
       //- }
-      xhr.send(JSON.stringify({"image": image.src, "modelType": modelType}));
+      xhr.send(JSON.stringify({"image": image.src, "modelType": modelType, "variantType": variantType}));
     }
 
     async function loadImage(imgFile) {
