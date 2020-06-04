@@ -5,11 +5,11 @@ block layout-content
     h1.Banner LEIP Evaluate
     div.Message(style="float: left")
       div.Title
-        h3 Classify an Image
+        h3 Evaluate Model Performance
       div.form(style="float: left")
         .form-group
-          label(for='photo') Photo 
-          input#file(type='file',name='photo', accept='image/*')
+          label(for='sample_index') Index
+          input#file(type='file',name='sample_index' webkitdirectory multiple)
         .form-group
           label Model Type:
           input(type='radio', name='model_type', id='mobilenetv2', value='mobilenetv2', checked=true)
@@ -26,37 +26,22 @@ block layout-content
           label(for='lorenz_int8') Lorenz Int8
           input(type='radio', name='variant_type', id='lorenz_int16', value='lorenz_int16')
           label(for='lorenz_int16') Lorenz Int16
-        span.Details Upload an image to classify using MobileNetv2
+        span.Details Upload a list of images to classify using MobileNetv2
       div#Output.text()
         p#label()
         p#loadtime()
         p#inferencetime()
     div.NavButtons
-      button.NavButton(onclick="predict()") Evaluate
+      button.NavButton(onclick="leip_eval()") Evaluate
 
   script.
-    async function predict() {
-      const imageURL = document.getElementById("file").files[0];
-      
-      const modelButtons = document.getElementsByName('model_type');
-      var modelType = 'mobilenetv2';
-      for (var i = 0; i < modelButtons.length; i++) {
-        if (modelButtons[i].checked) {
-          modelType = modelButtons[i].value;
-        }
-      }
-
-      const variantButtons = document.getElementsByName('variant_type');
-      var variantType = 'baseline';
-      for (var i = 0; i < variantButtons.length; i++) {
-        if (variantButtons[i].checked) {
-          variantType = variantButtons[i].value;
-        }
-      }
-
-      const image = await loadImage(imageURL);
+    async function leip_eval() {
+      const files = document.getElementById("file").files;
+      const parsedFiles = await parseFiles(files)
+      const modelType = getButtonValue('model_type', 'mobilenetv2')
+      const variantType = getButtonValue('variant_type', 'baseline')
       var xhr = new XMLHttpRequest();
-      xhr.open("POST", "/predict/", true);
+      xhr.open("POST", "/evaluate/", true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.onload = function () {
         if (xhr.readyState === xhr.DONE) {
@@ -74,8 +59,11 @@ block layout-content
       //- for (int i=0;i<100;i++) {
         
       //- }
-      xhr.send(JSON.stringify({"image": image.src, "modelType": modelType, "variantType": variantType}));
+      xhr.send(JSON.stringify({"data": parsedFiles, "modelType": modelType, "variantType": variantType}));
     }
+
+
+
 
     async function loadImage(imgFile) {
       return new Promise((resolve, reject) => {
@@ -90,4 +78,94 @@ block layout-content
         reader.onerror = reject;
         reader.readAsDataURL(imgFile);
       });
+    }
+
+    async function readIndex(filePath) {
+      return new Promise((resolve, reject) => {
+        var fr=new FileReader();
+        var samplesDict = []
+        fr.onload=function(){ 
+          var samples = fr.result.split("\n")
+          for (var i = 0; i < samples.length; i++) {
+              var sample = samples[i].split(" ")
+              if (sample.length == 2) {
+                samplesDict.push({"path": sample[0], "label": parseInt(sample[1])})
+              }
+          }
+          resolve(samplesDict);   
+        }
+        fr.readAsText(filePath);
+      });
+    }
+
+    async function parseFiles(files) {
+      var fileList = []
+      var index = null
+      var classNames = null
+      
+      for (var i = 0; i < files.length; i++) {
+        type = files[i].type.split("/")[0]
+        if(type == 'image') {
+          fileList.push(files[i])
+        } else {
+          var filename = files[i].webkitRelativePath.split("/")[1]
+          if (filename == 'index.txt') {
+            var index = files[i]
+          } else if (filename == 'class_names.txt') {
+            var classNames = files[i]
+          }
+        }
+      }
+
+      var newFiles = Array.from(fileList)
+      newFiles.sort(function(a, b) {
+        var pathA = a.webkitRelativePath;
+        var pathB = b.webkitRelativePath;
+        if (pathA < pathB) {
+          return -1;
+        }
+        if (pathA > pathB) {
+          return 1;
+        }
+        return 0;
+      })
+
+      console.log(newFiles)
+
+
+      var indexData = await readIndex(index)
+      indexData.sort(function(a, b) {
+        var pathA = a.path;
+        var pathB = b.path;
+        if (pathA < pathB) {
+          return -1;
+        }
+        if (pathA > pathB) {
+          return 1;
+        }
+        return 0;
+      })
+
+      console.log(indexData)
+
+      var UriList = []
+      for (var i = 0; i < indexData.length; i++ ) {
+        var imgData = await loadImage(newFiles[i])
+        var obj = {"uri": imgData.src, "label": indexData[i]["label"]}
+        UriList.push(obj)
+      }
+
+      return UriList
+    }
+
+    function getButtonValue(buttonId, defaultValue) {
+      const Buttons = document.getElementsByName(buttonId);
+      var value = defaultValue;
+      for (var i = 0; i < Buttons.length; i++) {
+        if (Buttons[i].checked) {
+          value = Buttons[i].value;
+        }
+      }
+
+      return value;
     }

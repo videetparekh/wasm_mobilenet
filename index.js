@@ -21,8 +21,8 @@ const HOST = '0.0.0.0';
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.json({ limit: "50mb", extended: true }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.json({ limit: "100mb", extended: true }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 /**
  * Routes Definitions

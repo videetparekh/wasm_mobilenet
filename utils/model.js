@@ -1,4 +1,4 @@
-var preProcLib = require('../utils/preprocessor.js')
+var preproc = require('../utils/preprocessor.js')
 
 module.exports = {
     collectModel: function(modelType, variantType) {
@@ -18,10 +18,10 @@ function MobileNetv2(variantType) {
     // The base path is the path to the folder containing the params and graph files
     // The modelObj provides filenames relative to the basepath collected from ModelInfo
     const modelInfo = {
-        "baseline": { "base": "public/wasm/mobilenetv2/baseline/", "input_type": "float32", "preprocessor": preProcLib.preprocess_imagenet },
-        "reimann": { "base": "public/wasm/mobilenetv2/reimann/", "input_type": "float32", "preprocessor": preProcLib.preprocess_imagenet },
-        "lorenz_int8": { "base": "public/wasm/mobilenetv2/lorenz_int8/", "input_type": "uint8", "preprocessor": preProcLib.preprocess_uint8 },
-        "lorenz_int16": { "base": "public/wasm/mobilenetv2/lorenz_int16/", "input_type": "uint8", "preprocessor": preProcLib.preprocess_uint8 }
+        "baseline": { "base": "public/wasm/mobilenetv2/baseline/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
+        "reimann": { "base": "public/wasm/mobilenetv2/reimann/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
+        "lorenz_int8": { "base": "public/wasm/mobilenetv2/lorenz_int8/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 },
+        "lorenz_int16": { "base": "public/wasm/mobilenetv2/lorenz_int16/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 }
     }
 
     var modelObj = {
@@ -43,10 +43,10 @@ function TinyModel(variantType) {
     // The base path is the path to the folder containing the params and graph files
     // The modelObj provides filenames relative to the basepath collected from ModelInfo
     const modelInfo = {
-        "baseline": { "base": "public/wasm/tiny/baseline/", "input_type": "float32", "preprocessor": preProcLib.preprocess_imagenet },
-        "reimann": { "base": "public/wasm/tiny/reimann/", "input_type": "float32", "preprocessor": preProcLib.preprocess_imagenet },
-        "lorenz_int8": { "base": "public/wasm/tiny/lorenz_int8/", "input_type": "uint8", "preprocessor": preProcLib.preprocess_uint8 },
-        "lorenz_int16": { "base": "public/wasm/tiny/lorenz_int16/", "input_type": "uint8", "preprocessor": preProcLib.preprocess_uint8 }
+        "baseline": { "base": "public/wasm/tiny/baseline/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
+        "reimann": { "base": "public/wasm/tiny/reimann/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
+        "lorenz_int8": { "base": "public/wasm/tiny/lorenz_int8/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 },
+        "lorenz_int16": { "base": "public/wasm/tiny/lorenz_int16/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 }
     }
 
     var modelObj = {

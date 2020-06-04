@@ -37,22 +37,8 @@ block layout-content
   script.
     async function predict() {
       const imageURL = document.getElementById("file").files[0];
-      
-      const modelButtons = document.getElementsByName('model_type');
-      var modelType = 'mobilenetv2';
-      for (var i = 0; i < modelButtons.length; i++) {
-        if (modelButtons[i].checked) {
-          modelType = modelButtons[i].value;
-        }
-      }
-
-      const variantButtons = document.getElementsByName('variant_type');
-      var variantType = 'baseline';
-      for (var i = 0; i < variantButtons.length; i++) {
-        if (variantButtons[i].checked) {
-          variantType = variantButtons[i].value;
-        }
-      }
+      const modelType = getButtonValue('model_type', 'mobilenetv2')
+      const variantType = getButtonValue('variant_type', 'baseline')
 
       const image = await loadImage(imageURL);
       var xhr = new XMLHttpRequest();
@@ -63,7 +49,6 @@ block layout-content
           if (xhr.status === 200) {
             var response = JSON.parse(xhr.responseText)
             document.getElementById("Output").style["border"] = '1.5px solid #235a82';
-            //- document.getElementById("Output").style["float"] = 'left';
             document.getElementById("label").innerHTML = "<b>Label:</b> "+ response.label;
             document.getElementById("loadtime").innerHTML = "<b>Load Time:</b> "+ response.loadtime+"ms";
             document.getElementById("inferencetime").innerHTML = "<b>Inference Time:</b> "+ response.inftime+"ms";
@@ -71,9 +56,6 @@ block layout-content
         }
       };
 
-      //- for (int i=0;i<100;i++) {
-        
-      //- }
       xhr.send(JSON.stringify({"image": image.src, "modelType": modelType, "variantType": variantType}));
     }
 
@@ -90,4 +72,16 @@ block layout-content
         reader.onerror = reject;
         reader.readAsDataURL(imgFile);
       });
+    }
+    
+    function getButtonValue(buttonId, default_value) {
+      const Buttons = document.getElementsByName(buttonId);
+      var value = default_value;
+      for (var i = 0; i < Buttons.length; i++) {
+        if (Buttons[i].checked) {
+          value = Buttons[i].value;
+        }
+      }
+
+      return value;
     }
