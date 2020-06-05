@@ -43,10 +43,6 @@ module.exports = {
         const inputData = tvm.empty(modelInfo["input_shape"], modelInfo["input_type"], tvm.cpu());
         const outputData = tvm.empty(modelInfo["output_shape"], modelInfo["input_type"], tvm.cpu());
         const outputGPU = executor.getOutput(0);
-        // run the first time to make sure all weights are populated.
-        // executor.run();
-        // await ctx.sync();
-        var end = now()
 
         classifier = {}
 

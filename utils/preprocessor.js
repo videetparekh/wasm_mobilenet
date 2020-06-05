@@ -4,7 +4,7 @@ module.exports = {
     preprocess_imagenet: function(imageData) {
         var rgbFP32 = new Float32Array(cleanAndStripAlpha(imageData))
         var normArray = rgbFP32.map(normalize)
-        return rgbFP32
+        return normArray
     },
 
     preprocess_uint8: function(imageData) {
