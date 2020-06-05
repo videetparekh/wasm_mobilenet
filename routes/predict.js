@@ -25,16 +25,18 @@ router.post("/", async(req, res) => {
     var modelInfo = models.collectModel(modelType, variantType)
     var labels = await utils.getLabels(modelInfo["labels"])
 
+    var [classifier, loadtime] = await runtime.tvmSetup(modelInfo)
     var each = []
-    const iters = 50 // 1
+    const iters = 1 // 1
 
     for (let i = 0; i < iters; i++) {
-        var [classifier, loadtime] = await runtime.tvmSetup(modelInfo)
         inf_start = now()
         var preprocstart = now()
         var imageData = preproc.drawCanvas(imageURI, modelInfo['input_shape'])
         var processedImage = modelInfo["preprocessor"](imageData)
         var preproctime = now() - preprocstart
+        fs.writeFile("debug_js.txt", processedImage.join(), function(err) { if (err) { console.log(err) } })
+
         var label = await classifier.classify(processedImage)
         inf_end = now()
         inftime = inf_end - inf_start
