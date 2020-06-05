@@ -27,10 +27,11 @@ block layout-content
           input(type='radio', name='variant_type', id='lorenz_int16', value='lorenz_int16')
           label(for='lorenz_int16') Lorenz Int16
         span.Details Upload a list of images to classify using MobileNetv2
-      div#Output.text()
-        p#label()
+      div#Output.table
         p#loadtime()
-        p#inferencetime()
+        p#accuracy()
+        p#avg_inf_speed()
+        p#inference_ps()
     div.NavButtons
       button.NavButton(onclick="leip_eval()") Evaluate
 
@@ -47,23 +48,21 @@ block layout-content
         if (xhr.readyState === xhr.DONE) {
           if (xhr.status === 200) {
             var response = JSON.parse(xhr.responseText)
-            document.getElementById("Output").style["border"] = '1.5px solid #235a82';
-            //- document.getElementById("Output").style["float"] = 'left';
-            document.getElementById("label").innerHTML = "<b>Label:</b> "+ response.label;
+            var Output = document.getElementById("Output")
+            var table = getTable(response.predictions)
+            for (var i = 0; i<Output.children.length; i++) {
+              if (Output.children[i].tagName == 'table' || Output.children[i].tagName == 'TABLE') {Output.removeChild(Output.children[i])}
+            }
+            Output.appendChild(table);
             document.getElementById("loadtime").innerHTML = "<b>Load Time:</b> "+ response.loadtime+"ms";
-            document.getElementById("inferencetime").innerHTML = "<b>Inference Time:</b> "+ response.inftime+"ms";
+            document.getElementById("accuracy").innerHTML = "<b>Accuracy:</b> "+ response.accuracy_top1;
+            document.getElementById("avg_inf_speed").innerHTML = "<b>Average Inference Speed:</b> "+ response.avg_inf_speed+"ms";
+            document.getElementById("inference_ps").innerHTML = "<b>Inferences Per Second:</b> "+ response.inference_ps;
           }
         }
       };
-
-      //- for (int i=0;i<100;i++) {
-        
-      //- }
       xhr.send(JSON.stringify({"data": parsedFiles, "modelType": modelType, "variantType": variantType}));
     }
-
-
-
 
     async function loadImage(imgFile) {
       return new Promise((resolve, reject) => {
@@ -130,9 +129,6 @@ block layout-content
         return 0;
       })
 
-      console.log(newFiles)
-
-
       var indexData = await readIndex(index)
       indexData.sort(function(a, b) {
         var pathA = a.path;
@@ -145,8 +141,6 @@ block layout-content
         }
         return 0;
       })
-
-      console.log(indexData)
 
       var UriList = []
       for (var i = 0; i < indexData.length; i++ ) {
@@ -168,4 +162,72 @@ block layout-content
       }
 
       return value;
+    }
+
+    function getTable(response) {
+      var table = document.createElement('table');
+      table.style['width'] = '100%';
+
+      var tr = document.createElement('tr');
+      var sampleHeader = document.createElement('th');
+      var predLabelHeader = document.createElement('th');
+      var origLabelHeader = document.createElement('th');
+      var infTimeHeader = document.createElement('th');
+      var preprocTimeHeader = document.createElement('th');
+
+      var thborder = '1.5px solid #235a82';
+      var thbg = '#a9a9a9';
+
+      sampleHeader.style["border"] = thborder;
+      predLabelHeader.style["border"] = thborder;
+      origLabelHeader.style["border"] = thborder;
+      infTimeHeader.style["border"] = thborder;
+      preprocTimeHeader.style["border"] = thborder;
+
+      sampleHeader.style["background-color"] = thbg;
+      predLabelHeader.style["background-color"] = thbg;
+      origLabelHeader.style["background-color"] = thbg;
+      infTimeHeader.style["background-color"] = thbg;
+      preprocTimeHeader.style["background-color"] = thbg;
+
+      sampleHeader.appendChild(document.createTextNode("Sample"));
+      predLabelHeader.appendChild(document.createTextNode("predLabel"));
+      origLabelHeader.appendChild(document.createTextNode("originalLabel"));
+      infTimeHeader.appendChild(document.createTextNode("inftime"));
+      preprocTimeHeader.appendChild(document.createTextNode("preprocess"));
+
+      tr.appendChild(sampleHeader);
+      tr.appendChild(predLabelHeader);
+      tr.appendChild(origLabelHeader);
+      tr.appendChild(infTimeHeader);
+      tr.appendChild(preprocTimeHeader);
+
+      table.appendChild(tr)
+
+      for (var i = 0; i < response.length; i++) {
+        var pred = response[i]
+        var tr = document.createElement('tr');
+
+        var sample = document.createElement('td');
+        var predLabel = document.createElement('td');
+        var origLabel = document.createElement('td');
+        var infTime = document.createElement('td');
+        var preprocTime = document.createElement('td');
+
+        sample.appendChild(document.createTextNode((i+1).toString()));
+        predLabel.appendChild(document.createTextNode(pred.predLabel));
+        origLabel.appendChild(document.createTextNode(pred.originalLabel));
+        infTime.appendChild(document.createTextNode(pred.inftime+"ms"));
+        preprocTime.appendChild(document.createTextNode(pred.preprocess+"ms"));
+
+        tr.appendChild(sample);
+        tr.appendChild(predLabel);
+        tr.appendChild(origLabel);
+        tr.appendChild(infTime);
+        tr.appendChild(preprocTime);
+
+        table.appendChild(tr);
+      }
+
+      return table
     }

@@ -48,7 +48,13 @@ block layout-content
         if (xhr.readyState === xhr.DONE) {
           if (xhr.status === 200) {
             var response = JSON.parse(xhr.responseText)
-            document.getElementById("Output").style["border"] = '1.5px solid #235a82';
+            var Output = document.getElementById("Output");
+            Output.style["border"] = '1.5px solid #235a82';
+            for (var i = 0; i<Output.children.length; i++) {
+              if (Output.children[i].tagName == 'canvas' || Output.children[i].tagName == 'CANVAS') {Output.removeChild(Output.children[i])}
+            }
+            var canv = createCanvas(image);
+            Output.prepend(canv);
             document.getElementById("label").innerHTML = "<b>Label:</b> "+ response.label;
             document.getElementById("loadtime").innerHTML = "<b>Load Time:</b> "+ response.loadtime+"ms";
             document.getElementById("inferencetime").innerHTML = "<b>Inference Time:</b> "+ response.inftime+"ms";
@@ -84,4 +90,28 @@ block layout-content
       }
 
       return value;
+    }
+
+    function createCanvas(image) {
+      var canv = document.createElement('canvas');
+      canv.width = '200';
+      canv.height= '200';
+      const sourceWidth = image.width;
+      const sourceHeight = image.height;
+      const shortEdge = Math.min(image.width, image.height);
+      const yy = Math.floor((sourceHeight - shortEdge) / 2);
+      const xx = Math.floor((sourceWidth - shortEdge) / 2);
+      const imageCanvasContext = canv.getContext("2d");
+      imageCanvasContext.drawImage(
+          image,
+          xx,
+          yy,
+          shortEdge,
+          shortEdge,
+          0,
+          0,
+          200,
+          200
+        );
+      return canv;
     }
