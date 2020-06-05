@@ -159,3 +159,11 @@ a {
     font-size: 12px;
     padding: 5px;
 }
+
+.Message>.table {
+    font-size: 12px;
+    padding: 10px;
+    margin-right: 10px;
+    float: left;
+    width: 100%;
+}
