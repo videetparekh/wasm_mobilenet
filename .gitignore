@@ -115,9 +115,10 @@ dist
 .yarn/build-state.yml
 .pnp.*
 
+# MacOS
+.DS_Store
 
 # Model and Result Files
 public/wasm/*
 *.csv
 results/
-
