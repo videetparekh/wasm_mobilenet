@@ -122,3 +122,5 @@ dist
 public/wasm/*
 *.csv
 results/
+
+*.txt

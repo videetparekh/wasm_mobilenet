@@ -56,8 +56,8 @@ block layout-content
             var canv = createCanvas(image);
             Output.prepend(canv);
             document.getElementById("label").innerHTML = "<b>Label:</b> "+ response.label;
-            document.getElementById("loadtime").innerHTML = "<b>Load Time:</b> "+ response.loadtime+"ms";
-            document.getElementById("inferencetime").innerHTML = "<b>Inference Time:</b> "+ response.inftime+"ms";
+            document.getElementById("loadtime").innerHTML = "<b>Load Time:</b> "+ parseFloat(response.loadtime).toFixed(2).toString()+"ms";
+            document.getElementById("inferencetime").innerHTML = "<b>Inference Time:</b> "+ parseFloat(response.inftime).toFixed(2).toString()+"ms";
           }
         }
       };
@@ -94,8 +94,11 @@ block layout-content
 
     function createCanvas(image) {
       var canv = document.createElement('canvas');
-      canv.width = '200';
-      canv.height= '200';
+      canv.style["margin-left"] = "auto";
+      canv.style["margin-right"] = "auto";
+      canv.style["display"] = "block";
+      canv.width = '150';
+      canv.height= '150';
       const sourceWidth = image.width;
       const sourceHeight = image.height;
       const shortEdge = Math.min(image.width, image.height);
@@ -110,8 +113,8 @@ block layout-content
           shortEdge,
           0,
           0,
-          200,
-          200
+          150,
+          150
         );
       return canv;
     }
