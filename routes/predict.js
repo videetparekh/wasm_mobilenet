@@ -25,11 +25,12 @@ router.post("/", async(req, res) => {
     var modelInfo = models.collectModel(modelType, variantType)
     var labels = await utils.getLabels(modelInfo["labels"])
 
-    var [classifier, loadtime] = await runtime.tvmSetup(modelInfo)
+    var [classifier, loadtime] = await runtime.tvmSetup(modelInfo) // Multiple Inference - Single Load
     var each = []
     const iters = 1 // 1
 
     for (let i = 0; i < iters; i++) {
+        // var [classifier, loadtime] = await runtime.tvmSetup(modelInfo) // Single Inference - Single Load
         inf_start = now()
         var preprocstart = now()
         var imageData = preproc.drawCanvas(imageURI, modelInfo['input_shape'])
