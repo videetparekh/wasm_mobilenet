@@ -4,24 +4,34 @@ module.exports = {
     collectModel: function(modelType, variantType) {
 
         //This function owns a database that links a modelType string passed User's post call to the function that contains the model's data
-
-        modelDatabase = {
-            "mobilenetv2": MobileNetv2,
-            "tiny": TinyModel,
-        }
+        const modelDatabase = getModelDatabase();
         return modelDatabase[modelType](variantType)
 
+    },
+
+    getModelVariantList: function() {
+        var modelKeys = Object.keys(getModelDatabase())
+        var variantKeys = ['fp32', 'int8', 'int16']
+        return { "modelTypes": modelKeys, "variantTypes": variantKeys }
     }
+}
+
+// Link Model names to their functions here
+function getModelDatabase() {
+    modelDatabase = {
+        "mobilenetv2": MobileNetv2,
+        "tiny": TinyModel
+    }
+    return modelDatabase;
 }
 
 function MobileNetv2(variantType) {
     // The base path is the path to the folder containing the params and graph files
     // The modelObj provides filenames relative to the basepath collected from ModelInfo
     const modelInfo = {
-        "baseline": { "base": "public/wasm/mobilenetv2/baseline/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
-        "reimann": { "base": "public/wasm/mobilenetv2/reimann/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
-        "lorenz_int8": { "base": "public/wasm/mobilenetv2/lorenz_int8/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 },
-        "lorenz_int16": { "base": "public/wasm/mobilenetv2/lorenz_int16/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 }
+        "fp32": { "base": "public/wasm/mobilenetv2/fp32/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
+        "int8": { "base": "public/wasm/mobilenetv2/int8/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 },
+        "int16": { "base": "public/wasm/mobilenetv2/int16/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 }
     }
 
     var modelObj = {
@@ -43,10 +53,9 @@ function TinyModel(variantType) {
     // The base path is the path to the folder containing the params and graph files
     // The modelObj provides filenames relative to the basepath collected from ModelInfo
     const modelInfo = {
-        "baseline": { "base": "public/wasm/tiny/baseline/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
-        "reimann": { "base": "public/wasm/tiny/reimann/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
-        "lorenz_int8": { "base": "public/wasm/tiny/lorenz_int8/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 },
-        "lorenz_int16": { "base": "public/wasm/tiny/lorenz_int16/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 }
+        "fp32": { "base": "public/wasm/tiny/fp32/", "input_type": "float32", "preprocessor": preproc.preprocess_imagenet },
+        "int8": { "base": "public/wasm/tiny/int8/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 },
+        "int16": { "base": "public/wasm/tiny/int16/", "input_type": "uint8", "preprocessor": preproc.preprocess_uint8 }
     }
 
     var modelObj = {
@@ -63,7 +72,6 @@ function TinyModel(variantType) {
 
     return modelObj
 }
-
 
 /*
 Expectation for a Model Schema:

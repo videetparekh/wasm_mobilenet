@@ -11,21 +11,15 @@ block layout-content
           label(for='photo') Photo 
           input#file(type='file',name='photo', accept='image/*')
         .form-group
-          label Model Type:
-          input(type='radio', name='model_type', id='mobilenetv2', value='mobilenetv2', checked=true)
-          label(for='mobilenetv2') MobileNetv2
-          input(type='radio', name='model_type', id='tiny', value='tiny')
-          label(for='tiny') Tiny Model - Person Classifier
+          label(for='model_type') Model Types 
+                  select(name='model_type', id='')
+                      each mtype in modelTypes
+                          option=mtype
         .form-group
-          label Variant Type:
-          input(type='radio', name='variant_type', id='baseline', value='baseline', checked=true)
-          label(for='baseline') Baseline
-          input(type='radio', name='variant_type', id='reimann', value='reimann')
-          label(for='reimann') Reimann
-          input(type='radio', name='variant_type', id='lorenz_int8', value='lorenz_int8')
-          label(for='lorenz_int8') Lorenz Int8
-          input(type='radio', name='variant_type', id='lorenz_int16', value='lorenz_int16')
-          label(for='lorenz_int16') Lorenz Int16
+          label(for='variant_type') Variant Types 
+                  select(name='variant_type', id='')
+                      each vtype in variantTypes
+                          option=vtype
         span.Details Upload an image to classify using MobileNetv2
       div#Output.text()
         p#label()
@@ -37,8 +31,8 @@ block layout-content
   script.
     async function predict() {
       const imageURL = document.getElementById("file").files[0];
-      const modelType = getButtonValue('model_type', 'mobilenetv2')
-      const variantType = getButtonValue('variant_type', 'baseline')
+      const modelType = getDropDownValue('model_type', 'mobilenetv2')
+      const variantType = getDropDownValue('variant_type', 'fp32')
 
       const image = await loadImage(imageURL);
       var xhr = new XMLHttpRequest();
@@ -80,16 +74,9 @@ block layout-content
       });
     }
     
-    function getButtonValue(buttonId, default_value) {
-      const Buttons = document.getElementsByName(buttonId);
-      var value = default_value;
-      for (var i = 0; i < Buttons.length; i++) {
-        if (Buttons[i].checked) {
-          value = Buttons[i].value;
-        }
-      }
-
-      return value;
+   function getDropDownValue(dropdownId, defaultValue) {
+      const dropdown = document.getElementsByName(dropdownId);
+      return dropdown[0].value
     }
 
     function createCanvas(image) {

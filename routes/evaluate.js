@@ -14,7 +14,7 @@ var runtime = require('../utils/runtime.js')
 const router = express.Router();
 
 router.get("/", (req, res) => {
-    res.render("evaluate");
+    res.render("evaluate", models.getModelVariantList());
 });
 
 // Display the dashboard page
