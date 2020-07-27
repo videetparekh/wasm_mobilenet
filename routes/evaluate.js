@@ -28,7 +28,7 @@ router.post("/", async(req, res) => {
     var labels = await utils.getLabels(modelInfo["labels"])
 
     var predData = []
-    var [classifier, loadtime] = await runtime.tvmSetup(modelInfo)
+    var [classifier, loadtime] = await runtime.lreSetup(modelInfo)
     var total_start = now()
     for (let i = 0; i < data.length; i++) {
         inf_start = now()
